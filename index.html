@@ -26,6 +26,8 @@
   #cab { display:-webkit-box; display:-webkit-flex; display:flex; -webkit-box-pack:justify; -webkit-justify-content:space-between; justify-content:space-between;
     font-size:8vh; font-weight:500; line-height:1; margin:1vh 0 3vh; }
   #mes { text-transform:capitalize; }
+  .nav { display:inline-block; padding:0 2vh; color:#8ab4f8; cursor:pointer; }
+  #ant { padding-left:0; }
   #rejilla { width:100%; -webkit-flex:1; flex:1; border-collapse:collapse; table-layout:fixed; }
   #rejilla th { font-size:4.6vh; font-weight:700; padding-bottom:1.5vh; }
   #rejilla td { text-align:center; font-size:4.6vh; font-weight:500; padding:0; }
@@ -93,7 +95,7 @@
 <body>
 <div id="app">
   <div id="cal">
-    <div id="cab"><span id="mes"></span><span id="anio"></span></div>
+    <div id="cab"><span><span id="ant" class="nav">&#8249;</span><span id="mes"></span><span id="sig" class="nav">&#8250;</span></span><span id="anio"></span></div>
     <table id="rejilla"></table>
   </div>
   <div id="der">
@@ -174,8 +176,17 @@
     }
     return m;
   }
+  var desplazMes = 0, tMes = 0;
+  function cambiarMes(delta) {
+    desplazMes += delta;
+    clearTimeout(tMes);
+    // vuelve al mes actual tras 60s sin tocar
+    if (desplazMes) tMes = setTimeout(function () { desplazMes = 0; pintarMes(); }, 60000);
+    pintarMes();
+  }
   function pintarMes() {
-    var hoy = new Date(), y = hoy.getFullYear(), mes = hoy.getMonth();
+    var hoy = new Date(), base = new Date(hoy.getFullYear(), hoy.getMonth() + desplazMes, 1);
+    var y = base.getFullYear(), mes = base.getMonth(), esActual = desplazMes === 0;
     $('mes').textContent = MESES[mes];
     $('anio').textContent = y;
     var cab = CONFIG.LUNES_PRIMERO ? ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'] : ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
@@ -194,7 +205,7 @@
       else {
         var fecha = new Date(y, mes, d), dow = fecha.getDay(), cls = [];
         if (dow === 0 || dow === 6) cls.push('finde');
-        if (d === hoy.getDate()) cls.push('hoy');
+        if (esActual && d === hoy.getDate()) cls.push('hoy');
         if (marcas[fecha.getTime()]) cls.push('evento');
         html += '<td' + (cls.length ? ' class="' + cls.join(' ') + '"' : '') + '><span class="num">' + d + '</span></td>';
       }
@@ -433,6 +444,8 @@
     if (f) { try { f.call(el); } catch (e) {} }
     if ($('panel').className) cerrarPanel(); else abrirPanel();
   });
+  $('ant').addEventListener('click', function (ev) { ev.stopPropagation(); cambiarMes(-1); });
+  $('sig').addEventListener('click', function (ev) { ev.stopPropagation(); cambiarMes(1); });
   $('panel').addEventListener('click', function (ev) { ev.stopPropagation(); mantenerPanel(); });
   $('cerrar').addEventListener('click', cerrarPanel);
   $('archivo').addEventListener('change', function () {
